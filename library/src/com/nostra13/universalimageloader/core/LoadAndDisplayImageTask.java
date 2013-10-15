@@ -18,11 +18,13 @@ package com.nostra13.universalimageloader.core;
 import android.graphics.Bitmap;
 import android.os.Handler;
 import android.widget.ImageView;
+
 import com.nostra13.universalimageloader.cache.disc.DiscCacheAware;
 import com.nostra13.universalimageloader.core.assist.*;
 import com.nostra13.universalimageloader.core.assist.FailReason.FailType;
 import com.nostra13.universalimageloader.core.decode.ImageDecoder;
 import com.nostra13.universalimageloader.core.decode.ImageDecodingInfo;
+import com.nostra13.universalimageloader.core.display.FakeBitmapDisplayer;
 import com.nostra13.universalimageloader.core.download.ImageDownloader;
 import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
 import com.nostra13.universalimageloader.utils.IoUtils;
@@ -84,6 +86,8 @@ final class LoadAndDisplayImageTask implements Runnable {
 	final ImageLoadingListener listener;
 
 	private LoadedFrom loadedFrom = LoadedFrom.NETWORK;
+	
+	private final static Bitmap fakeBitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888);
 
 	public LoadAndDisplayImageTask(ImageLoaderEngine engine, ImageLoadingInfo imageLoadingInfo, Handler handler) {
 		this.engine = engine;
@@ -101,7 +105,7 @@ final class LoadAndDisplayImageTask implements Runnable {
 		imageView = imageLoadingInfo.imageView;
 		targetSize = imageLoadingInfo.targetSize;
 		options = imageLoadingInfo.options;
-		listener = imageLoadingInfo.listener;
+		listener = imageLoadingInfo.listener;		
 	}
 
 	@Override
@@ -279,6 +283,10 @@ final class LoadAndDisplayImageTask implements Runnable {
 	}
 
 	private Bitmap decodeImage(String imageUri) throws IOException {
+		if (options.getDisplayer() instanceof FakeBitmapDisplayer) {
+			return fakeBitmap;
+		}
+		
 		ViewScaleType viewScaleType = ViewScaleType.fromImageView(imageView);
 		ImageDecodingInfo decodingInfo = new ImageDecodingInfo(memoryCacheKey, imageUri, targetSize, viewScaleType, getDownloader(), options);
 		return decoder.decode(decodingInfo);
@@ -335,7 +343,7 @@ final class LoadAndDisplayImageTask implements Runnable {
 		return savedSuccessfully;
 	}
 
-	private void downloadImage(File targetFile) throws IOException {
+	private void downloadImage(File targetFile) throws IOException {		
 		InputStream is = getDownloader().getStream(uri, options.getExtraForDownloader());
 		try {
 			OutputStream os = new BufferedOutputStream(new FileOutputStream(targetFile), BUFFER_SIZE);
@@ -365,7 +373,7 @@ final class LoadAndDisplayImageTask implements Runnable {
 
 	private ImageDownloader getDownloader() {
 		ImageDownloader d;
-		if (engine.isNetworkDenied()) {
+		if (engine.isNetworkDenied() && options.isNetworkDenied()) {
 			d = networkDeniedDownloader;
 		} else if (engine.isSlowNetwork()) {
 			d = slowNetworkDownloader;

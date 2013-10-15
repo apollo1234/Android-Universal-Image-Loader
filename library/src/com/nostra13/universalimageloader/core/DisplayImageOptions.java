@@ -72,6 +72,7 @@ public final class DisplayImageOptions {
 	private final BitmapProcessor postProcessor;
 	private final BitmapDisplayer displayer;
 	private final Handler handler;
+	private final boolean networkDenied;
 
 	private DisplayImageOptions(Builder builder) {
 		stubImage = builder.stubImage;
@@ -88,6 +89,7 @@ public final class DisplayImageOptions {
 		postProcessor = builder.postProcessor;
 		displayer = builder.displayer;
 		handler = builder.handler;
+		networkDenied = builder.networkDenied;
 	}
 
 	public boolean shouldShowStubImage() {
@@ -112,6 +114,10 @@ public final class DisplayImageOptions {
 
 	public boolean shouldDelayBeforeLoading() {
 		return delayBeforeLoading > 0;
+	}
+	
+	public boolean isNetworkDenied() {
+		return networkDenied;
 	}
 
 	public int getStubImage() {
@@ -190,6 +196,7 @@ public final class DisplayImageOptions {
 		private BitmapProcessor postProcessor = null;
 		private BitmapDisplayer displayer = DefaultConfigurationFactory.createBitmapDisplayer();
 		private Handler handler = null;
+		private boolean networkDenied = true;
 
 		public Builder() {
 			decodingOptions.inPurgeable = true;
@@ -355,6 +362,11 @@ public final class DisplayImageOptions {
 			this.handler = handler;
 			return this;
 		}
+		
+		public Builder denyNetworkDownloads(boolean networkDenied) {
+			this.networkDenied = networkDenied;
+			return this;
+		}
 
 		/** Sets all options equal to incoming options */
 		public Builder cloneFrom(DisplayImageOptions options) {
@@ -372,6 +384,8 @@ public final class DisplayImageOptions {
 			postProcessor = options.postProcessor;
 			displayer = options.displayer;
 			handler = options.handler;
+			networkDenied = options.networkDenied;
+			
 			return this;
 		}
 
